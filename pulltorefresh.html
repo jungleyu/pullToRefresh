@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8">
+  <meta name="portview" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="HandheldFriendly" content="true">
+  <script src="http://code.jquery.com/jquery-1.10.2.js"></script>
+  <script src="http://libs.baidu.com/underscore/1.3.3/underscore-min.js"></script>
+  <script src="./javascript/iscroll.js"></script>
+  <link rel="stylesheet" type="text/css" href="./styles/main.css">
+</head>
+
+<body>
+  <div id="header">Setting</div>
+  <div id="wrapper">
+    <div id="scroller">
+      <div id="pullDown">
+        <span class="pullDownIcon"></span>
+        <span class="pullDownLabel">Pull down to refresh...</span>
+      </div>
+      <ul id="thelist">
+      </ul>
+      <div id="pullUp">
+        <span class="pullUpIcon"></span>
+        <span class="pullUpLabel">Pull up to refresh...</span>
+      </div>
+    </div>
+  </div>
+  <div id="footer"></div>
+  <script type="text/javascript">
+  $(document).ready(function() {
+    var h = [];
+    var myScroll,
+      pullDownEl, pullDownOffset,
+      pullUpEl, pullUpOffset, count = 0;
+    for (var i = 0; i < 30; i++) {
+      h.push('<li> item' + i + '</li>');
+    }
+    $('#thelist').append(h.join(''));
+
+    function pullDownAction() {
+      _.delay(function() {
+        var el, h = [],
+          i;
+        el = $('#thelist');
+        for (i = 0; i < 3; i++) {
+          h.push('<li>');
+          h.push('Updated Item ' + (++count));
+          h.push('</li>');
+        }
+        $(h.join('')).insertBefore(el.find('li:first'));
+        myScroll.refresh();
+      }, 1000);
+    }
+
+    function pullUpAction() {
+      _.delay(function() {
+        var el, h = [],
+          i;
+        el = $('#thelist');
+        for (i = 0; i < 3; i++) {
+          h.push('<li>');
+          h.push('Updated Item ' + (++count));
+          h.push('</li>');
+        }
+        $(h.join('')).insertAfter(el.find('li:last'));
+        myScroll.refresh();
+      }, 4000);
+    }
+
+    pullDownEl = $('#pullDown');
+    pullUpEl = $('#pullUp');
+    pullDownOffset = pullDownEl.offset().top;
+    pullUpOffset = pullUpEl.offset().top;
+
+    myScroll = new iScroll('wrapper', {
+      useTransition: true,
+      topOffset: pullDownOffset,
+      onRefresh: function() {
+        if (pullDownEl.hasClass('loading')) {
+          pullDownEl.attr('class', '');
+          pullDownEl.find('.pullDownLabel').text('Pull down to refresh...');
+        } else if (pullUpEl.hasClass('loading')) {
+          pullUpEl.attr('class', '');
+          pullUpEl.find('.pullUpLabel').text('Pull up to load more...');
+        }
+      },
+      onScrollMove: function() {
+        if (this.y > 5 && !pullDownEl.hasClass('flip')) {
+          pullDownEl.addClass('flip');
+          pullDownEl.find('.pullDownLabel').text('Release to refresh...');
+          this.minScrollY = 0;
+        } else if (this.y < 5 && pullDownEl.hasClass('flip')) {
+          pullDownEl.attr('class', '');
+          pullDownEl.find('.pullDownLabel').text('Pull down to refresh...');
+          this.minScrollY = -pullDownOffset;
+        } else if (this.y < (this.maxScrollY - 5) && !pullUpEl.hasClass('flip')) {
+          pullUpEl.addClass('flip');
+          pullUpEl.find('.pullUpLabel').text('Release to refresh...');
+          this.maxScrollY = this.maxScrollY;
+        } else if (this.y > (this.maxScrollY + 5) && pullUpEl.hasClass('flip')) {
+          pullUpEl.attr('class', '');
+          pullUpEl.find('.pullUpLabel').text('Pull up to load more...');
+          this.maxScrollY = pullUpOffset;
+        }
+      },
+      onScrollEnd: function() {
+        if (pullDownEl.hasClass('flip')) {
+          pullDownEl.addClass('loading');
+          pullDownEl.find('.pullDownLabel').text('Loading...');
+          pullDownAction(); // Execute custom function (ajax call?)
+        } else if (pullUpEl.hasClass('flip')) {
+          pullUpEl.addClass('loading');
+          pullUpEl.find('.pullUpLabel').text('Loading...');
+          pullUpAction(); // Execute custom function (ajax call?)
+        }
+      }
+    });
+  });
+  </script>
+</body>
+
+</html>
